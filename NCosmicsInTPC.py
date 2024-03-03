@@ -85,7 +85,9 @@ if __name__ == "__main__":
     # zPosition = -10
     nSolidAngles = 10000
 
-    xyBounds = np.array([7510., 9990., 10000., 10100.])
+    outfile = 'nCosmicsInTPC3.npy'
+    # xyBounds = np.array([10., 20., 30., 40., 50., 100., 500., 1000., 5000. ])
+    xyBounds = np.array([7500, 8000., 9000., 10000.])
     nBounds = len(xyBounds)
     nTraverse = np.zeros(nBounds)
     nCounter = np.zeros(nBounds)
@@ -120,5 +122,5 @@ if __name__ == "__main__":
 
     result = np.array([ [xyBound, nT, nC, float(nT)/float(nC)] for xyBound, nT, nC in zip(xyBounds, nTraverse, nCounter)])
 
-    with open('nCosmicsInTPC3.npy', 'wb') as f:
+    with open(outfile, 'wb') as f:
         np.save(f, result)
