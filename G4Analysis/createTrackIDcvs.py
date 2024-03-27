@@ -9,14 +9,24 @@ def particleLength( start, end ):
 
 if __name__ == "__main__":
 
-    indir = '/Users/yuntse/data/coherent/preLArTPC/geant4/OneMEventsCR'
-    outdir = '/Users/yuntse/data/coherent/preLArTPC/analysis/TrackID'
+    # Settings for cosmic background
+    # indir = '/Users/yuntse/data/coherent/preLArTPC/geant4/OneMEventsCR'
+    # outdir = '/Users/yuntse/data/coherent/preLArTPC/analysis/TrackID'
 
-    nFiles = 1000
+    # nFiles = 1000
+    # nInFilesInOne = 20
+
+    # Settings for nueArCC signal
+    indir = '/Users/yuntse/data/coherent/preLArTPC/geant4/nueArCCSignal'
+    outdir = '/Users/yuntse/data/coherent/preLArTPC/analysis/nueArCCTrackID'
+
+    nFiles = 10
+    nInFilesInOne = 1
+
 
     # unit in mm, half the dimension
-    larX = 250.
-    larY = 300.
+    larX = 300.
+    larY = 250.
     larZ = 300.
 
     columns = [ 'Run', 'Event', 'TrackID', 'MotherID', 'Pdg', 'StartE', 'dE', 'StartX', 'StartY', 'StartZ', 
@@ -25,10 +35,10 @@ if __name__ == "__main__":
 
     for iFile in range(nFiles):
 
-        if iFile%20 == 0:
+        if iFile%nInFilesInOne == 0:
             df = pd.DataFrame( columns = columns )
 
-        infilename = f'{indir}/CosmicG4_{iFile:04d}.root'
+        infilename = f'{indir}/nueArCC_sns_yDir_g4_{iFile:02d}.root'
         print( f'Processing {infilename}....')
         infile = ROOT.TFile( infilename, 'READ')
         t = infile.Get("edep")
@@ -39,7 +49,7 @@ if __name__ == "__main__":
 
         for s in t:
     
-            if s.pdg == 22 or np.abs(s.pdg) == 12 or np.abs(s.pdg) == 14 or np.abs(s.pdg) == 16:
+            if s.pdg == 22 or np.abs(s.pdg) == 12 or np.abs(s.pdg) == 14 or np.abs(s.pdg) == 16 or np.abs(s.pdg) == 2112:
                 continue
     
             mask = ( np.abs(s.startX) <= larX ) & ( np.abs(s.startY) <= larY ) & ( np.abs(s.startZ) <= larZ ) & \
@@ -73,7 +83,7 @@ if __name__ == "__main__":
 
         infile.Close()
 
-        if iFile%20 == (20-1):
-            iCSV = np.floor(iFile/20).astype(int)
-            outcsv = f'{outdir}/TrackID{iCSV:04d}.csv'
+        if iFile%nInFilesInOne == (nInFilesInOne-1):
+            iCSV = np.floor(iFile/nInFilesInOne).astype(int)
+            outcsv = f'{outdir}/nueArCCTrackID{iCSV:02d}.csv'
             df.to_csv( outcsv, index = False)

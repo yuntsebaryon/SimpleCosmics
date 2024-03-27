@@ -5,8 +5,8 @@ import pandas as pd
 
 if __name__ == "__main__":
 
-    incsv = '/Users/yuntse/data/coherent/preLArTPC/analysis/TrackID.csv'
-    outcsv = '/Users/yuntse/data/coherent/preLArTPC/analysis/Evt.csv'
+    incsv = '/Users/yuntse/data/coherent/preLArTPC/analysis/nueArCCTrackID/nueArCCTrackID00.csv'
+    outcsv = '/Users/yuntse/data/coherent/preLArTPC/analysis/nueArCCEvt00.csv'
 
     indf = pd.read_csv( incsv )
 
