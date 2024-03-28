@@ -5,42 +5,118 @@ import pandas as pd
 
 if __name__ == "__main__":
 
-    incsv = '/Users/yuntse/data/coherent/preLArTPC/analysis/nueArCCTrackID/nueArCCTrackID00.csv'
-    outcsv = '/Users/yuntse/data/coherent/preLArTPC/analysis/nueArCCEvt00.csv'
+    indir = '/Users/yuntse/data/coherent/preLArTPC/analysis/trackID/nueArCCoutFiducial'
+    outcsv = '/Users/yuntse/data/coherent/preLArTPC/analysis/nueArCCoutFiducialEvt.csv'
 
-    indf = pd.read_csv( incsv )
+    # Concatenate the input data frames
+    nInFiles = 40
+    csvFiles = [ f'{indir}/nueArCCoutFiducial_TrackID_{i:02d}.csv' for i in range(nInFiles) ]
+    rawdfs = []
 
-    columns = [ 'Run', 'Event', 'eTotalE', 'eMaxE', 'eMaxLength', 'muLength', 'muTotalE' ]
+    for csvFile in csvFiles:
+        rawdf = pd.read_csv( csvFile )
+        rawdfs.append( rawdf ) 
+    
+    indf = pd.concat( rawdfs, ignore_index = True )
+
+    savedParticleList = np.array([ 11, -11, 13, -13, 2212, 2112, 22, 211, -211 ])
+    for p in indf.Pdg.unique():
+        if not np.any(savedParticleList == p):
+            print( f'Particle with PDG = {p} will not be saved!')
+
+    # Define the output data frame
+    columns = [ 'Run', 'Event', 'eTotalE', 'eMaxE', 'eMaxLength', 'muTotalE', 'muMaxE', 'muMaxLength',
+                'pTotalE', 'pMaxE', 'pMaxLength', 'nTotalE', 'nMaxE', 'nMaxLength',
+                'gTotalE', 'gMaxE', 'gMaxLength', 'piTotalE', 'piMaxE', 'piMaxLength' ]
     df = pd.DataFrame( columns = columns )
 
-    evtID = np.array([ -1, -1 ])
-    eTotalE = 0.
-    eMaxE = 0.
-
+    # Find the unique event list
+    evtList = []
     for row in indf.itertuples( index = False):
-        if ((row.Run, row.Event) != evtID).any():
-            evtID = np.array([ row.Run, row.Event ])
-            if np.abs(row.Pdg) == 13:
-                df_temp = pd.DataFrame([{ 'Run': row.Run, 'Event': row.Event, 'eTotalE': 0., 'eMaxE': 0.,
-                                            'eMaxLength': 0., 'muLength': row.StraightTrackLength,
-                                            'muTotalE': row.dE }])
-            
-                df = pd.concat([ df, df_temp ], ignore_index = True)
-            else:
-                df_temp = pd.DataFrame([{ 'Run': row.Run, 'Event': row.Event, 'eTotalE': row.dE, 'eMaxE': row.dE,
-                                            'eMaxLength': row.StraightTrackLength, 'muLength': 0.,
-                                            'muTotalE': 0. }])
-            
-                df = pd.concat([ df, df_temp ], ignore_index = True)
-        else:
-            if np.abs(row.Pdg) == 13:
-                if row.StraightTrackLength > df.loc[df.index[-1], 'muLength']:
-                    df.loc[df.index[-1], 'muLength'] = row.StraightTrackLength
-                df.loc[df.index[-1], 'muTotalE'] += row.dE
-            else:
-                df.loc[df.index[-1], 'eTotalE'] += row.dE
-                if row.dE > df.loc[df.index[-1], 'eMaxE']:
-                    df.loc[df.index[-1], 'eMaxE'] = row.dE
-                    df.loc[df.index[-1], 'eMaxLength'] = row.StraightTrackLength
+        evtID = (row.Run, row.Event)
+        if evtID not in evtList:
+            evtList.append( evtID )
+
+    # Loop over the events
+    for iRun, iEvt in evtList:
+        event = indf[(indf.Run==iRun)&(indf.Event==iEvt)]
+
+        # Electrons
+        eTotalE = 0.
+        eMaxE = 0.
+        eMaxLength = 0.
+
+        if any(np.abs(event.Pdg) == 11):
+            electrons = event[np.abs(event.Pdg) == 11]
+            eTotalE = electrons.dE.sum()
+            eMaxE = electrons.dE.max()
+            eMaxLength = electrons.StraightTrackLength.max()
+
+        # Muons
+        muTotalE = 0.
+        muMaxE = 0.
+        muMaxLength = 0.
+
+        if any(np.abs(event.Pdg) == 13):
+            muons = event[np.abs(event.Pdg) == 13]
+            muTotalE = muons.dE.sum()
+            muMaxE = muons.dE.max()
+            muMaxLength = muons.StraightTrackLength.max()
+
+        # Protons
+        pTotalE = 0.
+        pMaxE = 0.
+        pMaxLength = 0.
+
+        if any(event.Pdg == 2212):
+            protons = event[event.Pdg == 2212]
+            pTotalE = protons.dE.sum()
+            pMaxE = protons.dE.max()
+            pMaxLength = protons.StraightTrackLength.max()
+
+        # Neutrons
+        nTotalE = 0.
+        nMaxE = 0.
+        nMaxLength = 0.
+
+        if any(event.Pdg == 2112):
+            neutrons = event[event.Pdg == 2112]
+            nTotalE = neutrons.dE.sum()
+            nMaxE = neutrons.dE.max()
+            nMaxLength = neutrons.StraightTrackLength.max()
+
+        # gammas
+        gTotalE = 0.
+        gMaxE = 0.
+        gMaxLength = 0.
+
+        if any(event.Pdg == 22):
+            gammas = event[event.Pdg == 22]
+            gTotalE = gammas.dE.sum()
+            gMaxE = gammas.dE.max()
+            gMaxLength = gammas.StraightTrackLength.max()
+
+        # Charged pions
+        piTotalE = 0.
+        piMaxE = 0.
+        piMaxLength = 0.
+
+        if any(np.abs(event.Pdg) == 211):
+            pions = event[np.abs(event.Pdg) == 211]
+            piTotalE = pions.dE.sum()
+            piMaxE = pions.dE.max()
+            piMaxLength = pions.StraightTrackLength.max()
+
+        # Save the event information into the data frame
+        evtDF = pd.DataFrame([{ 'Run': int(iRun), 'Event': int(iEvt), 'eTotalE': eTotalE, 'eMaxE': eMaxE, 
+                                'eMaxLength': eMaxLength, 'muTotalE': muTotalE, 'muMaxE': muMaxE, 
+                                'muMaxLength': muMaxLength, 'pTotalE': pTotalE, 'pMaxE': pMaxE, 
+                                'pMaxLength': pMaxLength, 'nTotalE': nTotalE, 'nMaxE': nMaxE, 
+                                'nMaxLength': nMaxLength, 'gTotalE': gTotalE, 'gMaxE': gMaxE, 
+                                'gMaxLength': gMaxLength, 'piTotalE': piTotalE, 'piMaxE': piMaxE,
+                                'piMaxLength': piMaxLength }])
+        
+        df = pd.concat([ df, evtDF ], ignore_index = True)
     
+    # Save to csv
     df.to_csv( outcsv, index = False)

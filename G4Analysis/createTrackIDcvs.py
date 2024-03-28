@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import ROOT
 import numpy as np
 import pandas as pd
@@ -9,18 +10,20 @@ def particleLength( start, end ):
 
 if __name__ == "__main__":
 
-    # Settings for cosmic background
-    # indir = '/Users/yuntse/data/coherent/preLArTPC/geant4/OneMEventsCR'
-    # outdir = '/Users/yuntse/data/coherent/preLArTPC/analysis/TrackID'
+    # Default
+    startFile = 0
+    nFiles = 1
 
-    # nFiles = 1000
+    startFile = int(sys.argv[1])
+    nFiles = int(sys.argv[2])
+
+    indir = '/Users/yuntse/data/coherent/preLArTPC/geant4/nueArCCSignal'
+    outdir = '/Users/yuntse/data/coherent/preLArTPC/analysis/trackID/nueArCCSignal'
+
+    # Settings for cosmic background
     # nInFilesInOne = 20
 
     # Settings for nueArCC signal
-    indir = '/Users/yuntse/data/coherent/preLArTPC/geant4/nueArCCSignal'
-    outdir = '/Users/yuntse/data/coherent/preLArTPC/analysis/nueArCCTrackID'
-
-    nFiles = 10
     nInFilesInOne = 1
 
 
@@ -33,7 +36,7 @@ if __name__ == "__main__":
                 'EndX', 'EndY', 'EndZ', 'RealTrackLength', 'StraightTrackLength']
     df = pd.DataFrame( columns = columns )
 
-    for iFile in range(nFiles):
+    for iFile in range(startFile, startFile+nFiles):
 
         if iFile%nInFilesInOne == 0:
             df = pd.DataFrame( columns = columns )
@@ -49,7 +52,7 @@ if __name__ == "__main__":
 
         for s in t:
     
-            if s.pdg == 22 or np.abs(s.pdg) == 12 or np.abs(s.pdg) == 14 or np.abs(s.pdg) == 16 or np.abs(s.pdg) == 2112:
+            if np.abs(s.pdg) == 12 or np.abs(s.pdg) == 14 or np.abs(s.pdg) == 16 or s.pdg > 1000180000:
                 continue
     
             mask = ( np.abs(s.startX) <= larX ) & ( np.abs(s.startY) <= larY ) & ( np.abs(s.startZ) <= larZ ) & \
@@ -85,5 +88,5 @@ if __name__ == "__main__":
 
         if iFile%nInFilesInOne == (nInFilesInOne-1):
             iCSV = np.floor(iFile/nInFilesInOne).astype(int)
-            outcsv = f'{outdir}/nueArCCTrackID{iCSV:02d}.csv'
+            outcsv = f'{outdir}/nueArCCSignal_TrackID_{iCSV:02d}.csv'
             df.to_csv( outcsv, index = False)
