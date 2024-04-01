@@ -6,10 +6,10 @@ from array import array
 
 if __name__ == "__main__":
 
-    infile = '/Users/yuntse/data/coherent/preLArTPC/cosmic/Cosmic4Vector.npy'
-    outdir = '/Users/yuntse/data/coherent/preLArTPC/cosmic'
+    infile = '/Users/yuntse/data/coherent/preLArTPC/cosmic/Cosmic4Vector5M.npy'
+    outdir = '/Users/yuntse/data/coherent/preLArTPC/cosmic/CR5M'
     nEventPerFile = 1000
-    nEvent = 1000000
+    nEvent = 5000000
     nCRperEvent = 3
 
     # muon's constant
