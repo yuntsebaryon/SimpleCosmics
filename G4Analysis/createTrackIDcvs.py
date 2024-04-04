@@ -17,8 +17,10 @@ if __name__ == "__main__":
     startFile = int(sys.argv[1])
     nFiles = int(sys.argv[2])
 
-    indir = '/Users/yuntse/data/coherent/preLArTPC/geant4/nueArCCSignal'
-    outdir = '/Users/yuntse/data/coherent/preLArTPC/analysis/trackID/nueArCCSignal'
+    indir = '/Users/yuntse/data/coherent/preLArTPC/geant4/nueArCCSignalv2'
+    inPrefix = 'nueArCC_sns_yDir'
+    outdir = '/Users/yuntse/data/coherent/preLArTPC/analysis/trackIDv2/nueArCCSignal'
+    outPrefix = 'nueArCCSignal'
 
     # Settings for cosmic background
     # nInFilesInOne = 20
@@ -41,7 +43,7 @@ if __name__ == "__main__":
         if iFile%nInFilesInOne == 0:
             df = pd.DataFrame( columns = columns )
 
-        infilename = f'{indir}/nueArCC_sns_yDir_g4_{iFile:02d}.root'
+        infilename = f'{indir}/{inPrefix}_g4_{iFile:04d}.root'
         print( f'Processing {infilename}....')
         infile = ROOT.TFile( infilename, 'READ')
         t = infile.Get("edep")
@@ -52,11 +54,11 @@ if __name__ == "__main__":
 
         for s in t:
     
-            if np.abs(s.pdg) == 12 or np.abs(s.pdg) == 14 or np.abs(s.pdg) == 16 or s.pdg > 1000180000:
+            if np.abs(s.pdg) == 12 or np.abs(s.pdg) == 14 or np.abs(s.pdg) == 16 or s.pdg > 1000100000:
                 continue
     
-            mask = ( np.abs(s.startX) <= larX ) & ( np.abs(s.startY) <= larY ) & ( np.abs(s.startZ) <= larZ ) & \
-                    ( np.abs(s.endX) <= larX ) & ( np.abs(s.endY) <= larY ) & ( np.abs(s.endZ) <= larZ )
+            mask = (( np.abs(s.startX) <= larX ) & ( np.abs(s.startY) <= larY ) & ( np.abs(s.startZ) <= larZ )) | \
+                    (( np.abs(s.endX) <= larX ) & ( np.abs(s.endY) <= larY ) & ( np.abs(s.endZ) <= larZ ))
             
             if mask:
                 if s.event == Evt and s.trackID == TrackID:
@@ -88,5 +90,5 @@ if __name__ == "__main__":
 
         if iFile%nInFilesInOne == (nInFilesInOne-1):
             iCSV = np.floor(iFile/nInFilesInOne).astype(int)
-            outcsv = f'{outdir}/nueArCCSignal_TrackID_{iCSV:02d}.csv'
+            outcsv = f'{outdir}/{outPrefix}_TrackID_{iCSV:04d}.csv'
             df.to_csv( outcsv, index = False)
