@@ -5,12 +5,13 @@ import pandas as pd
 
 if __name__ == "__main__":
 
-    indir = '/Users/yuntse/data/coherent/preLArTPC/analysis/trackIDv2/nueArCCoutFiducial'
-    outcsv = '/Users/yuntse/data/coherent/preLArTPC/analysis/evtv2/nueArCCoutFiducialEvt.csv'
+    indir = '/Users/yuntse/data/coherent/preLArTPC/analysis/trackIDv2/CR2500K'
+    inprefix = 'cosmic'
+    outcsv = '/Users/yuntse/data/coherent/preLArTPC/analysis/evtv2/cosmicEvt.csv'
 
     # Concatenate the input data frames
-    nInFiles = 40
-    csvFiles = [ f'{indir}/nueArCCoutFiducial_TrackID_{i:04d}.csv' for i in range(nInFiles) ]
+    nInFiles = 125
+    csvFiles = [ f'{indir}/{inprefix}_TrackID_{i:04d}.csv' for i in range(nInFiles) ]
     rawdfs = []
 
     for csvFile in csvFiles:

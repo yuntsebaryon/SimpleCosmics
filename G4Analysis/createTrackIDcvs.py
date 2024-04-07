@@ -17,16 +17,19 @@ if __name__ == "__main__":
     startFile = int(sys.argv[1])
     nFiles = int(sys.argv[2])
 
-    indir = '/Users/yuntse/data/coherent/preLArTPC/geant4/nueArCCSignalv2'
-    inPrefix = 'nueArCC_sns_yDir'
-    outdir = '/Users/yuntse/data/coherent/preLArTPC/analysis/trackIDv2/nueArCCSignal'
-    outPrefix = 'nueArCCSignal'
+    indir = '/Users/yuntse/data/coherent/preLArTPC/geant4/brn500Kv2'
+    inPrefix = 'brn'
+    outdir = '/Users/yuntse/data/coherent/preLArTPC/analysis/trackIDv2/brn500K'
+    outPrefix = 'brn'
 
     # Settings for cosmic background
     # nInFilesInOne = 20
 
+    # Settings for BRN
+    nInFilesInOne = 10
+    
     # Settings for nueArCC signal
-    nInFilesInOne = 1
+    # nInFilesInOne = 1
 
 
     # unit in mm, half the dimension

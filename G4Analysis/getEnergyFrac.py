@@ -18,23 +18,23 @@ if __name__ == "__main__":
     nFiles = 2500
 
     # In the output csv file, change InnerE -> FiducialE, FiducialE -> PartConE
-    columns = [ 'Run', 'Event', 'InnerE', 'FiducialE', 'OutE', 'TotalE', 'MaxE', 'TopCRTE', 'BottomCRTE', 
+    columns = [ 'Run', 'Event', 'FiducialE', 'PartConE', 'OutE', 'TotalE', 'MaxE', 'pMaxE', 'TopCRTE', 'BottomCRTE', 
                'FrontCRTE', 'BackCRTE', 'LeftCRTE', 'RightCRTE' ]
     odf = pd.DataFrame( columns = columns )
     
     # unit in mm, half the dimension
-    # Fiducial volume
-    FX = 250.
-    FY = 200.
-    FZ = 250.
+    # Partly contained volume
+    PCX = 250.
+    PCY = 200.
+    PCZ = 250.
     # TPC volume
     TPCX = 300.
     TPCY = 250.
     TPCZ = 300.
-    # Inner volume
-    InX = 200.
-    InY = 150.
-    InZ = 200.
+    # Fiducial volume
+    FCX = 200.
+    FCY = 150.
+    FCZ = 200.
 
     for iFile in range( nFiles ):
 
@@ -89,17 +89,21 @@ if __name__ == "__main__":
         for eventNo, evt in inTPC.groupby('event'):
             if eventNo in muonicEvents: continue
             cs = evt[(evt.pdg.abs()==11)|(evt.pdg.abs()==13)|(evt.pdg.abs()==211)|(evt.pdg==2212)]
-            maskIn = (cs.startX.abs() <= InX)&(cs.startY.abs() <= InY)&(cs.startZ.abs() <= InZ)& \
-                     (cs.endX.abs() <= InX)&(cs.endY.abs() <= InY)&(cs.endZ.abs() <= InZ)
-            maskFi = ~maskIn & (cs.startX.abs() <= FX)&(cs.startY.abs() <= FY)&(cs.startZ.abs() <= FZ)& \
-                     (cs.endX.abs() <= FX)&(cs.endY.abs() <= FY)&(cs.endZ.abs() <= FZ)
-            maskOut = ~maskIn & ~maskFi & (cs.startX.abs() <= TPCX)&(cs.startY.abs() <= TPCY)&(cs.startZ.abs() <= TPCZ)& \
+            maskFC = (cs.startX.abs() <= FCX)&(cs.startY.abs() <= FCY)&(cs.startZ.abs() <= FCZ)& \
+                     (cs.endX.abs() <= FCX)&(cs.endY.abs() <= FCY)&(cs.endZ.abs() <= FCZ)
+            maskPC = ~maskFC & (cs.startX.abs() <= PCX)&(cs.startY.abs() <= PCY)&(cs.startZ.abs() <= PCZ)& \
+                     (cs.endX.abs() <= PCX)&(cs.endY.abs() <= PCY)&(cs.endZ.abs() <= PCZ)
+            maskOut = ~maskFC & ~maskPC & (cs.startX.abs() <= TPCX)&(cs.startY.abs() <= TPCY)&(cs.startZ.abs() <= TPCZ)& \
                      (cs.endX.abs() <= TPCX)&(cs.endY.abs() <= TPCY)&(cs.endZ.abs() <= TPCZ)
-            InnerE = cs[maskIn].dE.sum()
-            FiducialE = cs[maskFi].dE.sum()
+            FiducialE = cs[maskFC].dE.sum()
+            PartConE = cs[maskPC].dE.sum()
             OutE = cs[maskOut].dE.sum()
-            TotalE = InnerE + FiducialE + OutE
+            TotalE = FiducialE + PartConE + OutE
             MaxE = cs.groupby('trackID').dE.sum().max()
+            pMaxE = 0.
+            protons = evt[evt.pdg==2212]
+            if len(protons) > 0:
+                pMaxE = protons.groupby('trackID').dE.sum().max()
 
             # Check CRT hits
             TopCRTE = 0.
@@ -133,9 +137,9 @@ if __name__ == "__main__":
                 crtEvt = inRightCRT.get_group(eventNo)
                 RightCRTE = crtEvt[(crtEvt.pdg.abs()==11)|(crtEvt.pdg.abs()==13)|(crtEvt.pdg.abs()==211)|(crtEvt.pdg==2212)].dE.sum()
 
-            outCS = pd.DataFrame([{ 'Run': iFile, 'Event': eventNo, 'InnerE': InnerE, 'FiducialE': FiducialE, 'OutE': OutE, 
-                                   'TotalE': TotalE, 'MaxE': MaxE, 'TopCRTE': TopCRTE, 'BottomCRTE': BottomCRTE, 'FrontCRTE': FrontCRTE,
-                                    'BackCRTE': BackCRTE, 'LeftCRTE': LeftCRTE, 'RightCRTE': RightCRTE }])
+            outCS = pd.DataFrame([{ 'Run': iFile, 'Event': eventNo, 'FiducialE': FiducialE, 'PartConE': PartConE, 'OutE': OutE, 
+                                   'TotalE': TotalE, 'MaxE': MaxE, 'pMaxE': pMaxE, 'TopCRTE': TopCRTE, 'BottomCRTE': BottomCRTE, 
+                                   'FrontCRTE': FrontCRTE, 'BackCRTE': BackCRTE, 'LeftCRTE': LeftCRTE, 'RightCRTE': RightCRTE }])
             odf = pd.concat([ odf, outCS ], ignore_index = True)
     
     odf.to_csv( outcsv, index = False)
