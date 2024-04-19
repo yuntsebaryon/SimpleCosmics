@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 def stepTotalLength(steps):
-    return sum(np.hypot(steps.endX - steps.startX, steps.endY - steps.startY, steps.endZ - steps.startZ))
+    return sum(np.sqrt((steps.endX - steps.startX)**2 + (steps.endY - steps.startY)**2 + (steps.endZ - steps.startZ)**2))
 
 def particleLengths(particles): return particles.apply(stepTotalLength)
 
@@ -18,8 +18,8 @@ if __name__ == "__main__":
     nFiles = 2500
 
     # In the output csv file, change InnerE -> FiducialE, FiducialE -> PartConE
-    columns = [ 'Run', 'Event', 'FiducialE', 'PartConE', 'OutE', 'TotalE', 'MaxE', 'pMaxE', 'TopCRTE', 'BottomCRTE', 
-               'FrontCRTE', 'BackCRTE', 'LeftCRTE', 'RightCRTE' ]
+    columns = [ 'Run', 'Event', 'FiducialE', 'PartConE', 'OutE', 'TotalE', 'MaxE', 'MaxELength', 'pMaxE', 
+               'TopCRTE', 'BottomCRTE', 'FrontCRTE', 'BackCRTE', 'LeftCRTE', 'RightCRTE' ]
     odf = pd.DataFrame( columns = columns )
     
     # unit in mm, half the dimension
@@ -89,6 +89,14 @@ if __name__ == "__main__":
         for eventNo, evt in inTPC.groupby('event'):
             if eventNo in muonicEvents: continue
             cs = evt[(evt.pdg.abs()==11)|(evt.pdg.abs()==13)|(evt.pdg.abs()==211)|(evt.pdg==2212)]
+            if cs.empty:
+                outCS = pd.DataFrame([{ 'Run': iFile, 'Event': eventNo, 'FiducialE': 0, 'PartConE': 0, 'OutE': 0, 
+                                   'TotalE': 0, 'MaxE': 0, 'MaxELength': 0, 'pMaxE': 0, 
+                                   'TopCRTE': 0, 'BottomCRTE': 0, 
+                                   'FrontCRTE': 0, 'BackCRTE': 0, 'LeftCRTE': 0, 'RightCRTE': 0 }])
+                odf = pd.concat([ odf, outCS ], ignore_index = True)
+                continue
+
             maskFC = (cs.startX.abs() <= FCX)&(cs.startY.abs() <= FCY)&(cs.startZ.abs() <= FCZ)& \
                      (cs.endX.abs() <= FCX)&(cs.endY.abs() <= FCY)&(cs.endZ.abs() <= FCZ)
             maskPC = ~maskFC & (cs.startX.abs() <= PCX)&(cs.startY.abs() <= PCY)&(cs.startZ.abs() <= PCZ)& \
@@ -99,7 +107,13 @@ if __name__ == "__main__":
             PartConE = cs[maskPC].dE.sum()
             OutE = cs[maskOut].dE.sum()
             TotalE = FiducialE + PartConE + OutE
-            MaxE = cs.groupby('trackID').dE.sum().max()
+            byTrackID = cs.groupby('trackID')
+            MaxE = byTrackID.dE.sum().max()
+            trackIDMaxE = byTrackID.dE.sum().idxmax()
+            leadingP = byTrackID.get_group(trackIDMaxE)
+            # display(leadingP)
+            MaxELength = stepTotalLength(leadingP)
+            # print( f'{MaxELength=}')
             pMaxE = 0.
             protons = evt[evt.pdg==2212]
             if len(protons) > 0:
@@ -138,7 +152,8 @@ if __name__ == "__main__":
                 RightCRTE = crtEvt[(crtEvt.pdg.abs()==11)|(crtEvt.pdg.abs()==13)|(crtEvt.pdg.abs()==211)|(crtEvt.pdg==2212)].dE.sum()
 
             outCS = pd.DataFrame([{ 'Run': iFile, 'Event': eventNo, 'FiducialE': FiducialE, 'PartConE': PartConE, 'OutE': OutE, 
-                                   'TotalE': TotalE, 'MaxE': MaxE, 'pMaxE': pMaxE, 'TopCRTE': TopCRTE, 'BottomCRTE': BottomCRTE, 
+                                   'TotalE': TotalE, 'MaxE': MaxE, 'MaxELength': MaxELength, 'pMaxE': pMaxE, 
+                                   'TopCRTE': TopCRTE, 'BottomCRTE': BottomCRTE, 
                                    'FrontCRTE': FrontCRTE, 'BackCRTE': BackCRTE, 'LeftCRTE': LeftCRTE, 'RightCRTE': RightCRTE }])
             odf = pd.concat([ odf, outCS ], ignore_index = True)
     
