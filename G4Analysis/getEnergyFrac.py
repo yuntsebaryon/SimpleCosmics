@@ -11,11 +11,11 @@ def particleLengths(particles): return particles.apply(stepTotalLength)
 
 if __name__ == "__main__":
 
-    indir = '/Users/yuntse/data/coherent/preLArTPC/geant4/CR2500Kv2'
-    inPrefix = 'cosmic'
-    outcsv = '/Users/yuntse/data/coherent/preLArTPC/analysis/EFracv2/cosmicEFrac.csv'
+    indir = '/Users/yuntse/data/coherent/preLArTPC/geant4/hogv2'
+    inPrefix = 'hog'
+    outcsv = '/Users/yuntse/data/coherent/preLArTPC/analysis/EFracv2/hogEFrac.csv'
 
-    nFiles = 2500
+    nFiles = 10
 
     # In the output csv file, change InnerE -> FiducialE, FiducialE -> PartConE
     columns = [ 'Run', 'Event', 'FiducialE', 'PartConE', 'OutE', 'TotalE', 'MaxE', 'MaxELength', 'pMaxE', 
